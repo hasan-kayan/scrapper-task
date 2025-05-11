@@ -1,10 +1,19 @@
 # app/config.py
 
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AnyUrl
 
-load_dotenv()
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="allow")
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/campground_db")
-API_BASE_URL = os.getenv("API_BASE_URL", "https://thedyrt.com/api/v5/campgrounds/search")
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+    database_url: AnyUrl
+    api_base_url: AnyUrl
+    log_level: str = "INFO"
+
+
+settings = Settings()
+
+# Opsiyonel: hızlı erişim için bu satırlar kalabilir
+DATABASE_URL = settings.database_url
+API_BASE_URL = settings.api_base_url
+LOG_LEVEL = settings.log_level
