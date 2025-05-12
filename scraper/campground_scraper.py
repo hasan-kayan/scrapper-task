@@ -8,9 +8,46 @@ from tenacity import retry, wait_fixed, stop_after_attempt
 
 @retry(wait=wait_fixed(3), stop=stop_after_attempt(3))
 async def fetch_data(client, params):
+    """
+    Fetch data asynchronously from the API.
+
+    This function sends a GET request to the API endpoint specified in the settings
+    with the provided query parameters and a timeout.
+
+    Args:
+        client (httpx.AsyncClient): The HTTP client used to make the request.
+        params (dict): A dictionary of query parameters to include in the request.
+
+    Returns:
+        httpx.Response: The response object returned by the API.
+
+    Raises:
+        httpx.RequestError: If an error occurs while making the request.
+        httpx.HTTPStatusError: If the response contains an HTTP error status.
+    """
     return await client.get(settings.API_BASE_URL, params=params, timeout=30.0)
 
 async def fetch_and_store(bounds):
+    """
+    Fetches data from an API within the specified geographical bounds and stores it in the database.
+
+    This function sends an asynchronous HTTP request to fetch data based on the provided bounding box
+    coordinates. The data is then enriched with default values for missing fields, parsed into a 
+    `Campground` object, and upserted into the database.
+
+    Args:
+        bounds (list): A list of four float values representing the bounding box coordinates 
+                       [min_longitude, min_latitude, max_longitude, max_latitude].
+
+    Raises:
+        httpx.HTTPStatusError: If the HTTP request returns a non-successful status code.
+        httpx.ReadTimeout: If the HTTP request times out.
+
+    Logs:
+        - Logs successful storage of campground data.
+        - Logs errors during parsing or storing of individual items.
+        - Logs HTTP errors or timeouts during the API request.
+    """
     params = {
         "filter[search][bbox]": ",".join(map(str, bounds)),
         "page[number]": 1,
@@ -25,7 +62,6 @@ async def fetch_and_store(bounds):
 
             async for session in get_session():
                 for item in json_data.get("data", []):
-                    # 🔧 Eksik alanları boş/default değerlerle doldur
                     enriched = {
                         "id": item.get("id", ""),
                         "type": item.get("type", ""),
