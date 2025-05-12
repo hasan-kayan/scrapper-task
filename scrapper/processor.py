@@ -34,6 +34,7 @@ def save_to_db(campgrounds: List[PydanticCampground]):
         except Exception as e:
             logger.error(f"Database error for {cg.name}: {e}")
             session.rollback()
+    logger.info(f"💾 Saved {len(campgrounds)} campgrounds to the database")
     session.close()
 
 
@@ -43,6 +44,7 @@ async def scrape_all_bounds(
     end_date: str = None,
     **kwargs
 ):
+    
     """
     Scrape campgrounds for all bounds in the specified country.
     """

@@ -1,26 +1,27 @@
-# scrapper/bound_generator.py
-
+import json
 from typing import List
+from pathlib import Path
+
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "config" / "bounds_config.json"
+
+def load_bounds_config() -> dict:
+    with open(CONFIG_PATH, "r") as f:
+        return json.load(f)
 
 def generate_bounds(country: str = "usa") -> List[str]:
     """
-    Generate bounding boxes for a given country. Returns a list of bbox strings.
+    Generate bounding boxes for a given country using config JSON.
     """
-    country_bounds = {
-        "usa": (-125, 24, -66, 49),       # (sw_lng, sw_lat, ne_lng, ne_lat)
-        "turkey": (25, 35.8, 45, 42.1)
-        # Diğer ülkeleri buraya ekleyebilirsin
-    }
+    config = load_bounds_config()
 
-    if country not in country_bounds:
+    if country not in config:
         raise ValueError(f"Unknown country: {country}")
 
-    sw_lng, sw_lat, ne_lng, ne_lat = country_bounds[country]
+    sw_lng, sw_lat = config[country]["sw"]
+    ne_lng, ne_lat = config[country]["ne"]
+    step = config[country].get("step", 1.0)
 
-    # Örnek grid mantığı: 1x1 derece böl
-    step = 1.0
     bounds = []
-
     lat = sw_lat
     while lat < ne_lat:
         lng = sw_lng
